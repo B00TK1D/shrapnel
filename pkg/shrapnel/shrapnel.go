@@ -28,7 +28,7 @@ type Particle struct {
 	source   Transformer
 }
 
-func (e *Particle) explode(exploders []Exploder) {
+func (e *Particle) Explode(exploders []Exploder) {
 	for _, exploder := range exploders {
 		for _, Extracted := range exploder.Extract(e.Contents) {
 			Transformed := exploder.Transformer.Transform(Extracted)
@@ -38,16 +38,16 @@ func (e *Particle) explode(exploders []Exploder) {
 					original: Extracted,
 					source:   exploder.Transformer,
 				}
-				child.explode(exploders)
+				child.Explode(exploders)
 				e.children = append(e.children, &child)
 			}
 		}
 	}
 }
 
-func (e *Particle) implode() {
+func (e *Particle) Implode() {
 	for _, child := range e.children {
-		child.implode()
+		child.Implode()
 		if child.source.Reverse == nil {
 			continue
 		}
@@ -55,17 +55,17 @@ func (e *Particle) implode() {
 	}
 }
 
-func (e *Particle) apply(visitor func([]byte) []byte) {
+func (e *Particle) Apply(visitor func([]byte) []byte) {
 	e.Contents = visitor(e.Contents)
 	for _, child := range e.children {
-		child.apply(visitor)
+		child.Apply(visitor)
 	}
 }
 
-func (e *Particle) print() {
+func (e *Particle) Print() {
 	fmt.Println(string(e.Contents) + "\n")
 	for _, child := range e.children {
-		child.print()
+		child.Print()
 	}
 }
 
