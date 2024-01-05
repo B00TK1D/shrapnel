@@ -13,7 +13,7 @@ import (
 	"bytes"
 	"fmt"
 
-	shrapnel "github.com/B00TK1D/shrapnel/pkg/shrapnel"
+	shrapnel "github.com/B00TK1D/shrapnel"
 )
 
 func main() {
