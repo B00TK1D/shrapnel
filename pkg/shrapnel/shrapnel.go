@@ -21,19 +21,19 @@ type Exploder struct {
 	Filter      Filter
 }
 
-type Particle struct {
-	children []*Particle
+type Fragment struct {
+	children []*Fragment
 	Contents []byte
 	original []byte
 	source   Transformer
 }
 
-func (e *Particle) Explode(exploders []Exploder) {
+func (e *Fragment) Explode(exploders []Exploder) {
 	for _, exploder := range exploders {
 		for _, Extracted := range exploder.Extract(e.Contents) {
 			Transformed := exploder.Transformer.Transform(Extracted)
 			if exploder.Filter(Transformed) {
-				child := Particle{
+				child := Fragment{
 					Contents: Transformed,
 					original: Extracted,
 					source:   exploder.Transformer,
@@ -45,7 +45,7 @@ func (e *Particle) Explode(exploders []Exploder) {
 	}
 }
 
-func (e *Particle) Implode() {
+func (e *Fragment) Implode() {
 	for _, child := range e.children {
 		child.Implode()
 		if child.source.Reverse == nil {
@@ -55,14 +55,14 @@ func (e *Particle) Implode() {
 	}
 }
 
-func (e *Particle) Apply(visitor func([]byte) []byte) {
+func (e *Fragment) Apply(visitor func([]byte) []byte) {
 	e.Contents = visitor(e.Contents)
 	for _, child := range e.children {
 		child.Apply(visitor)
 	}
 }
 
-func (e *Particle) Print() {
+func (e *Fragment) Print() {
 	fmt.Println(string(e.Contents) + "\n")
 	for _, child := range e.children {
 		child.Print()
