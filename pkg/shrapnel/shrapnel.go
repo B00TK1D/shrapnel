@@ -28,7 +28,7 @@ type Fragment struct {
 	source   Transformer
 }
 
-func (e *Fragment) Explode(exploders []Exploder) {
+func (e *Fragment) Explode(exploders ...Exploder) {
 	for _, exploder := range exploders {
 		for _, Extracted := range exploder.Extract(e.Contents) {
 			Transformed := exploder.Transformer.Transform(Extracted)
@@ -38,7 +38,7 @@ func (e *Fragment) Explode(exploders []Exploder) {
 					original: Extracted,
 					source:   exploder.Transformer,
 				}
-				child.Explode(exploders)
+				child.Explode(exploders...)
 				e.children = append(e.children, &child)
 			}
 		}
