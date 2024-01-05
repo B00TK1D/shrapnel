@@ -32,6 +32,7 @@ func main() {
 		return bytes.ReplaceAll(input, []byte("user"), []byte("newthing"))
 	})
 
+	// Apply a converter that changes "hash" to "otherhash"
 	original.Apply(func(input []byte) []byte {
 		return bytes.ReplaceAll(input, []byte("hash"), []byte("otherhash"))
 	})
