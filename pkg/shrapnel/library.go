@@ -36,22 +36,22 @@ func isHTTP(input []byte) bool {
 //////////// Exploder library //////////
 ////////////////////////////////////////
 
-var base64Exploder = Exploder{
-	transformer: transformerFactory(b64.StdEncoding.DecodeString, b64.StdEncoding.EncodeToString),
-	filter:      filterChainGenerator(isAscii, isMinLength(4)),
-	extract:     regexExtractorGenerator(`[a-zA-Z0-9///+]+=?=?`),
+var Base64Exploder = Exploder{
+	Transformer: TransformerFactory(b64.StdEncoding.DecodeString, b64.StdEncoding.EncodeToString),
+	Filter:      FilterChainGenerator(isAscii, isMinLength(4)),
+	Extract:     regexExtractorGenerator(`[a-zA-Z0-9///+]+=?=?`),
 }
 
-var hexExploder = Exploder{
-	transformer: transformerFactory(hex.DecodeString, hex.EncodeToString),
-	filter:      filterChainGenerator(isAscii, isMinLength(4)),
-	extract:     regexExtractorGenerator(`[a-fA-F0-9]{2,}`),
+var HexExploder = Exploder{
+	Transformer: TransformerFactory(hex.DecodeString, hex.EncodeToString),
+	Filter:      FilterChainGenerator(isAscii, isMinLength(4)),
+	Extract:     regexExtractorGenerator(`[a-fA-F0-9]{2,}`),
 }
 
-var httpHeaderExploder = Exploder{
-	transformer: transformerFactory(nil, nil),
-	filter:      isAscii,
-	extract: func(input []byte) [][]byte {
+var HttpHeaderExploder = Exploder{
+	Transformer: TransformerFactory(nil, nil),
+	Filter:      isAscii,
+	Extract: func(input []byte) [][]byte {
 		// Extract each header contents
 
 		// Check if the input is HTTP
