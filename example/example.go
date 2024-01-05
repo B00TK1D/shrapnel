@@ -18,6 +18,7 @@ func main() {
 	exploders = append(exploders, shrapnel.HttpHeaderExploder)
 	exploders = append(exploders, shrapnel.Base64Exploder)
 	exploders = append(exploders, shrapnel.HexExploder)
+	exploders = append(exploders, shrapnel.JsonExploder)
 
 	// Explode the input
 	original.Explode(exploders)
