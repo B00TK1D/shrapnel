@@ -12,31 +12,42 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"os"
 
 	shrapnel "github.com/B00TK1D/shrapnel"
 )
 
 func main() {
+
+	// Open input.txt and read the contents
+	f, err := os.Open("input.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	input, err := io.ReadAll(f)
+	if err != nil {
+		panic(err)
+	}
+
+	// Create a new shrapnel object
 	original := shrapnel.Fragment{
-		Contents: []byte("HTTP/1.1 200 OK\r\nServer: nginx/1.25.3\r\nDate: Wed, 03 Jan 2024 07:12:24 GMT\r\nContent-Type: application/json\r\nContent-Length: 308\r\nConnection: keep-alive\r\nSet-Cookie: session=eyJ1c2VybmFtZSI6ICI5bVR5cmpsTmluQ1M3MHNpejlsTyIsICJ1c2VyX2lkIjogMjMxMjQsICJzYWx0ZWRfaGFzaCI6ICI4M2JmZjhhZDY4NTNkZWYyY2JhYjFhMTEwODVhNzcwMjljNjIzMDY1NWQ1ODhkNzQzMDAxYTlmNzcwYzU3NGM3In0=; Path=/\r\n\r\n{\"cookie\":\"eyJ1c2VybmFtZSI6ICI5bVR5cmpsTmluQ1M3MHNpejlsTyIsICJ1c2VyX2lkIjogMjMxMjQsICJzYWx0ZWRfaGFzaCI6ICI4M2JmZjhhZDY4NTNkZWYyY2JhYjFhMTEwODVhNzcwMjljNjIzMDY1NWQ1ODhkNzQzMDAxYTlmNzcwYzU3NGM3In0=\",\"id\":WXpJNWRGcFlVbTloVnpWdVNVaFNlV0ZZUW5OYVUwSnNZbTFPZGxwSFZtcz0=,\"status\":\"ok\",\"user\":\"9mTyrjlNinCS70siz9lO\"}\r\n"),
+		Contents: input,
 	}
 
 	// Explode the input
-	original.Explode(shrapnel.HttpHeaderExploder, shrapnel.Base64Exploder, shrapnel.HexExploder, shrapnel.JsonExploder)
+	original.Explode(shrapnel.AllExploders...)
 
-	// Print the results
+	// Print the original signature
 	original.Print()
+	fmt.Printf("Original signature:\t%x\n", original.Signature)
 
 	fmt.Println("----------------------------------------------------")
 
 	// Apply a converter that changes "user" to "newthing"
 	original.Apply(func(input []byte) []byte {
-		return bytes.ReplaceAll(input, []byte("user"), []byte("newthing"))
-	})
-
-	// Apply a converter that changes "hash" to "otherhash"
-	original.Apply(func(input []byte) []byte {
-		return bytes.ReplaceAll(input, []byte("hash"), []byte("otherhash"))
+		return bytes.ReplaceAll(input, []byte("secret"), []byte("trash"))
 	})
 
 	// Print the results
@@ -46,8 +57,13 @@ func main() {
 
 	// Implode the input
 	original.Implode()
+	updated := shrapnel.Fragment{
+		Contents: original.Contents,
+	}
+	updated.Explode(shrapnel.AllExploders...)
 
 	// Print the results
-	fmt.Println(string(original.Contents))
+	fmt.Println(string(updated.Contents))
+	fmt.Printf("New signature:\t\t%x\n", updated.Signature)
 }
 ```
