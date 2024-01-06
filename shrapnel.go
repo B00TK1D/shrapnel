@@ -164,8 +164,9 @@ func TransformerGenerator(Transform interface{}) func([]byte) []byte {
 }
 
 func regexExtractorGenerator(regex string) Extractor {
+	compiledRegex := regexp.MustCompile(regex)
 	return func(input []byte) ([][]byte, Signature) {
-		return regexp.MustCompile(regex).FindAll(input, -1), Signature{}
+		return compiledRegex.FindAll(input, -1), Signature{}
 	}
 }
 
