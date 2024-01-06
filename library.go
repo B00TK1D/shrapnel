@@ -6,7 +6,6 @@ import (
 	"compress/zlib"
 	b64 "encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"html"
 	"io"
 	"net/url"
@@ -37,25 +36,23 @@ func isMinLength(minLength int) Filter {
 	}
 }
 
-func isHTTP(input []byte) bool {
-	return regexp.MustCompile("(^(GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH) \\/.* HTTP\\/\\d\\.\\d|HTTP\\/\\d\\.\\d [1-5]\\d{2} [A-Z]+)\r\n").Match(input)
-}
+var httpHeaderRegex = regexp.MustCompile(`((GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH) \/.* HTTP\/\d\.\d|HTTP\/\d\.\d [1-5]\d{2} [A-Z]+)(?:.|\r\n)*?\r\n\r\n`)
+var jsonRegex = regexp.MustCompile(`({(?:[^{}]|{}|{[^{}]*})+})`)
 
 ////////////////////////////////////////
 //////////// Exploder library //////////
 ////////////////////////////////////////
 
 var AllExploders = []Exploder{
-	Base64Exploder,
-	HexExploder,
-	HtmlEncodingExploder,
-	UrlExploder,
-	UrlEncodingExploder,
 	HttpHeaderExploder,
-	JsonExploder,
 	GzipExploder,
 	ZlibExploder,
 	BrotiliExploder,
+	JsonExploder,
+	Base64Exploder,
+	HexExploder,
+	HtmlExploder,
+	UrlExploder,
 }
 
 var Base64Exploder = Exploder{
@@ -70,81 +67,53 @@ var HexExploder = Exploder{
 	Extract:     regexExtractorGenerator(`[a-fA-F0-9]{2,}`),
 }
 
-var HtmlEncodingExploder = Exploder{
+var HtmlExploder = Exploder{
 	Transformer: TransformerFactory(html.UnescapeString, html.EscapeString),
 	Filter:      FilterChainGenerator(isAscii, isMinLength(4)),
 	Extract:     regexExtractorGenerator(`&#\d{2,};`),
 }
 
 var UrlExploder = Exploder{
-	Transformer: TransformerFactory(url.PathUnescape, url.PathEscape),
-	Filter:      FilterChainGenerator(isAscii, isMinLength(4)),
-	Extract: func(input []byte) ([][]byte, Signature) {
-		compiledRegex := regexp.MustCompile(`^(GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH) (\/.*) HTTP\/(\d\.\d)`)
-		matches := compiledRegex.FindAllSubmatch(input, -1)
-		if len(matches) == 0 {
-			return [][]byte{}, Signature{}
-		}
-		extracted := [][]byte{}
-		signature := Signature{}
-		for _, match := range matches {
-			if len(match) < 4 {
-				continue
-			}
-			// Extract each element of the path, url decode it, and append it to the extracted array
-			pathElements := strings.Split(string(match[2]), "/")
-			for _, pathElement := range pathElements {
-				decodedElement, err := url.PathUnescape(pathElement)
-				if err != nil {
-					continue
-				}
-				extracted = append(extracted, []byte(decodedElement))
-			}
-			signature.append(Signature(match[1]))
-			signature.append(Signature(match[3]))
-		}
-		return extracted, signature
-	},
-}
-
-var UrlEncodingExploder = Exploder{
 	Transformer: TransformerFactory(url.QueryUnescape, url.QueryEscape),
 	Filter:      FilterChainGenerator(isAscii, isMinLength(4)),
-	Extract:     regexExtractorGenerator(`%[A-Fa-f0-9]{2}+`),
+	Extract:     regexExtractorGenerator(`%[A-Fa-f0-9]{2}`),
 }
 
 var HttpHeaderExploder = Exploder{
 	Transformer: TransformerFactory(nil, nil),
 	Filter:      isAscii,
 	Extract: func(input []byte) ([][]byte, Signature) {
-		// Extract each header contents
-
-		// Check if the input is HTTP
-		if !isHTTP([]byte(input)) {
-			return [][]byte{}, Signature{}
-		}
-
-		// First, split the input into headers and body
-		headerBodySplit := strings.Split(string(input), "\r\n\r\n")
-		if len(headerBodySplit) != 2 {
-			return [][]byte{}, Signature{}
-		}
-
-		// Split the headers into individual headers
-		headers := strings.Split(headerBodySplit[0], "\r\n")
-
+		// Extract all http messages
 		signature := Signature{}
+		headerContents := [][]byte{}
+		messages := httpHeaderRegex.FindAll([]byte(input), -1)
 
-		// Extract the header contents
-		headerContents := make([][]byte, len(headers))
-		for i, header := range headers {
-			splitHeader := strings.Split(header, ":")
-			if len(splitHeader) < 2 {
-				continue
+		for _, message := range messages {
+			headers := strings.Split(string(message), "\r\n")
+
+			for i, header := range headers {
+				if i == 0 {
+					// First line - treat differently
+					if strings.HasPrefix(header, "HTTP") {
+						// Response, use the entire line as the signature
+						signature.append(Signature([]byte(header)))
+					} else {
+						// Request, use the method and HTTP version as the signature
+						signature.append(Signature([]byte(strings.Split(header, " ")[0])))
+						signature.append(Signature([]byte(strings.Split(header, " ")[2])))
+					}
+					continue
+				}
+
+				splitHeader := strings.Split(header, ":")
+				if len(splitHeader) < 2 {
+					continue
+				}
+				signature.append(Signature([]byte(strings.Split(header, ":")[0])))
+				headerContents = append(headerContents, []byte(strings.Join(strings.Split(header, ":")[1:], ":")))
 			}
-			headerContents[i] = []byte(strings.Join(strings.Split(header, ":")[1:], ":"))
-			signature.append(Signature([]byte(strings.Split(header, ":")[0])))
 		}
+
 		return headerContents, signature
 	},
 }
@@ -153,27 +122,35 @@ var JsonExploder = Exploder{
 	Transformer: TransformerFactory(nil, nil),
 	Filter:      isAscii,
 	Extract: func(input []byte) ([][]byte, Signature) {
-		var result [][]byte
-
-		var obj map[string]interface{}
-		err := json.Unmarshal(input, &obj)
-		if err != nil {
-			return [][]byte{}, Signature{}
-		}
-
+		var contents [][]byte
 		signature := Signature{}
 
-		for key, value := range obj {
-			valueBytes, err := json.Marshal(value)
-			if err != nil {
-				continue
-			}
+		// Extract all json objects
+		objects := jsonRegex.FindAll(input, -1)
 
-			result = append(result, valueBytes)
-			signature.append(Signature([]byte(key)))
+		keyRegex := regexp.MustCompile(`"([^"]+)"\s*:\s*`)
+		valueRegex := regexp.MustCompile(`\s*:\s*"?(.+?)"?\s*(?:,|})`)
+
+		// Extract keys and values for each json object
+		for _, object := range objects {
+			keys := keyRegex.FindAllSubmatch(object, -1)
+			values := valueRegex.FindAllSubmatch(object, -1)
+			for _, key := range keys {
+				signature.append(Signature(key[1]))
+			}
+			for _, value := range values {
+				if len(value) < 2 {
+					continue
+				}
+				if value[1][0] == '[' || value[1][0] == '{' {
+					// Nested object, skip (necessary because golang doesn't support negative lookahead)
+					continue
+				}
+				contents = append(contents, value[1])
+			}
 		}
 
-		return result, signature
+		return contents, signature
 	},
 }
 

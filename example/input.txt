@@ -1,0 +1,105 @@
+POST /api/register HTTP/1.1
+Host: 10.60.9.1:5000
+User-Agent: checker
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+Content-Length: 79
+Content-Type: application/json
+
+{"username": "McxUexeIaRvdc3Uz8QiAZUTs", "password": "gLCmtln5jdMf7pQXOawTqMi"}HTTP/1.1 201 CREATED
+Server: nginx/1.25.1
+Date: Thu, 03 Aug 2023 16:12:00 GMT
+Content-Type: application/json
+Content-Length: 28
+Connection: keep-alive
+Content-Location: /users/McxUexeIaRvdc3Uz8QiAZUTs
+
+{"status":"ok","user_id":3}
+POST /api/login HTTP/1.1
+Host: 10.60.9.1:5000
+User-Agent: checker
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+Content-Length: 79
+Content-Type: application/json
+
+{"username": "McxUexeIaRvdc3Uz8QiAZUTs", "password": "gLCmtln5jdMf7pQXOawTqMi"}HTTP/1.1 200 OK
+Server: nginx/1.25.1
+Date: Thu, 03 Aug 2023 16:12:00 GMT
+Content-Type: application/json
+Content-Length: 253
+Connection: keep-alive
+Set-Cookie: session=eyJ1c2VybmFtZSI6ICJNY3hVZXhlSWFSdmRjM1V6OFFpQVpVVHMiLCAidXNlcl9pZCI6IDMsICJzYWx0ZWRfaGFzaCI6ICI2NDE5MDY5YjMwZTg0Y2VkZDJkOWM1Y2JhODFmNDIxMWI1M2U0NDMxMWE2MTNlOGRmY2U4MDBiOTgzNzYxMTQxIn0=; Path=/
+
+{"cookie":"eyJ1c2VybmFtZSI6ICJNY3hVZXhlSWFSdmRjM1V6OFFpQVpVVHMiLCAidXNlcl9pZCI6IDMsICJzYWx0ZWRfaGFzaCI6ICI2NDE5MDY5YjMwZTg0Y2VkZDJkOWM1Y2JhODFmNDIxMWI1M2U0NDMxMWE2MTNlOGRmY2U4MDBiOTgzNzYxMTQxIn0=","id":3,"status":"ok","user":"McxUexeIaRvdc3Uz8QiAZUTs"}
+GET /api/styles HTTP/1.1
+Host: 10.60.9.1:5000
+User-Agent: checker
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+Cookie: session=eyJ1c2VybmFtZSI6ICJNY3hVZXhlSWFSdmRjM1V6OFFpQVpVVHMiLCAidXNlcl9pZCI6IDMsICJzYWx0ZWRfaGFzaCI6ICI2NDE5MDY5YjMwZTg0Y2VkZDJkOWM1Y2JhODFmNDIxMWI1M2U0NDMxMWE2MTNlOGRmY2U4MDBiOTgzNzYxMTQxIn0=
+
+HTTP/1.1 200 OK
+Server: nginx/1.25.1
+Date: Thu, 03 Aug 2023 16:12:00 GMT
+Content-Type: application/json
+Content-Length: 1068
+Connection: keep-alive
+
+{"status":"ok","styles":[{"id":0,"name":"Anchor","type":"Ship"},{"id":1,"name":"Skull","type":"Ship"},{"id":2,"name":"Compass","type":"Ship"},{"id":0,"name":"Square","type":"Sail"},{"id":1,"name":"Rumble","type":"Sail"},{"id":2,"name":"Default","type":"Sail"},{"id":3,"name":"Blunt","type":"Sail"},{"id":0,"name":"0","type":"Sail color"},{"id":1,"name":"1","type":"Sail color"},{"id":2,"name":"2","type":"Sail color"},{"id":3,"name":"3","type":"Sail color"},{"id":4,"name":"4","type":"Sail color"},{"id":5,"name":"5","type":"Sail color"},{"id":6,"name":"6","type":"Sail color"},{"id":7,"name":"7","type":"Sail color"},{"id":0,"name":"Square","type":"Porthole"},{"id":1,"name":"Blunt","type":"Porthole"},{"id":2,"name":"Double","type":"Porthole"},{"id":0,"name":"0","type":"Flag color"},{"id":1,"name":"1","type":"Flag color"},{"id":2,"name":"2","type":"Flag color"},{"id":3,"name":"3","type":"Flag color"},{"id":4,"name":"4","type":"Flag color"},{"id":5,"name":"5","type":"Flag color"},{"id":6,"name":"6","type":"Flag color"},{"id":7,"name":"7","type":"Flag color"}]}
+PUT /api/user/ship HTTP/1.1
+Host: 10.60.9.1:5000
+User-Agent: checker
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+Cookie: session=eyJ1c2VybmFtZSI6ICJNY3hVZXhlSWFSdmRjM1V6OFFpQVpVVHMiLCAidXNlcl9pZCI6IDMsICJzYWx0ZWRfaGFzaCI6ICI2NDE5MDY5YjMwZTg0Y2VkZDJkOWM1Y2JhODFmNDIxMWI1M2U0NDMxMWE2MTNlOGRmY2U4MDBiOTgzNzYxMTQxIn0=
+Content-Length: 93
+Content-Type: application/json
+
+{"styles": [["Ship", 1], ["Sail", 0], ["Sail color", 3], ["Porthole", 2], ["Flag color", 6]]}HTTP/1.1 200 OK
+Server: nginx/1.25.1
+Date: Thu, 03 Aug 2023 16:12:00 GMT
+Content-Type: application/json
+Content-Length: 16
+Connection: keep-alive
+
+{"status":"ok"}
+GET /api/items HTTP/1.1
+Host: 10.60.9.1:5000
+User-Agent: checker
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+Cookie: session=eyJ1c2VybmFtZSI6ICJNY3hVZXhlSWFSdmRjM1V6OFFpQVpVVHMiLCAidXNlcl9pZCI6IDMsICJzYWx0ZWRfaGFzaCI6ICI2NDE5MDY5YjMwZTg0Y2VkZDJkOWM1Y2JhODFmNDIxMWI1M2U0NDMxMWE2MTNlOGRmY2U4MDBiOTgzNzYxMTQxIn0=
+
+HTTP/1.1 200 OK
+Server: nginx/1.25.1
+Date: Thu, 03 Aug 2023 16:12:00 GMT
+Content-Type: application/json
+Content-Length: 1281
+Connection: keep-alive
+
+{"items":[{"description":"Store here your secrets!","id":0,"name":"Treasure"},{"description":"The perfect weapon to bring on your boat","id":1,"name":"Cannon"},{"description":"Intimidate your enemies with this one","id":2,"name":"Blunderbuss"},{"description":"A journey of a thousand miles begins with a single step...","id":3,"name":"Coin"},{"description":"I will never lose my path again","id":4,"name":"Compass"},{"description":"What is the meaning of your life without this?","id":5,"name":"Map"},{"description":"A truly loyal friend","id":6,"name":"Parrot"},{"description":"Not the one you are looking for, if you are a CTF player","id":7,"name":"Flag"},{"description":"To protect you from the sun","id":8,"name":"Hat"},{"description":"Less noisy than the blunderbuss","id":9,"name":"Swords"},{"description":"Just to intimidate your enemies","id":10,"name":"Skull"},{"description":"Useful to see exploits from far away","id":11,"name":"Telescope"},{"description":"I swear, it is not an advertisement","id":12,"name":"Banner"},{"description":"It blocks exploits against your eye","id":13,"name":"Eye patch"},{"description":"Again, you might be disappointed","id":14,"name":"Black flag"},{"description":"Wait, are you old enough to drink?","id":15,"name":"Rum"}],"status":"ok"}
+POST /api/user/items HTTP/1.1
+Host: 10.60.9.1:5000
+User-Agent: checker
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+Cookie: session=eyJ1c2VybmFtZSI6ICJNY3hVZXhlSWFSdmRjM1V6OFFpQVpVVHMiLCAidXNlcl9pZCI6IDMsICJzYWx0ZWRfaGFzaCI6ICI2NDE5MDY5YjMwZTg0Y2VkZDJkOWM1Y2JhODFmNDIxMWI1M2U0NDMxMWE2MTNlOGRmY2U4MDBiOTgzNzYxMTQxIn0=
+Content-Length: 637
+Content-Type: application/json
+
+{"items": [{"id": 0, "personal_description": "DO7F23QMDNSI6KWON8U4SYM03TU621B="}, {"id": 4, "personal_description": "cEnh3ABjQnjVSguEvWd6x"}, {"id": 1, "personal_description": "IdWFvW4SBhoba04ptAdB4I4g"}, {"id": 15, "personal_description": "USRUUiw8MIcOf9GwOjvJo6uz"}, {"id": 6, "personal_description": "eh40pQhEJCRdmYxLUIEaxV"}, {"id": 14, "personal_description": "AsdEZH5uB5iJ7VfteSOT5ac"}, {"id": 7, "personal_description": "l87Y2MJYJpgJmlqUWXUPrXp"}, {"id": 9, "personal_description": "bFuthTuki2nxK4LjQp2C"}, {"id": 12, "personal_description": "g6GVNzzfTCf93JMCxnNWlf"}, {"id": 11, "personal_description": "hcMEeRfZ5X8bQ5gp5QH55"}]}HTTP/1.1 201 CREATED
+Server: nginx/1.25.1
+Date: Thu, 03 Aug 2023 16:12:00 GMT
+Content-Type: application/json
+Content-Length: 16
+Connection: keep-alive
+Content-Location: /users/McxUexeIaRvdc3Uz8QiAZUTs/items
+
+{"status":"ok"}
