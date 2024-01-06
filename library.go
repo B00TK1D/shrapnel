@@ -7,6 +7,7 @@ import (
 	b64 "encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"html"
 	"io"
 	"net/url"
 	"regexp"
@@ -47,7 +48,9 @@ func isHTTP(input []byte) bool {
 var AllExploders = []Exploder{
 	Base64Exploder,
 	HexExploder,
+	HtmlEncodingExploder,
 	UrlExploder,
+	UrlEncodingExploder,
 	HttpHeaderExploder,
 	JsonExploder,
 	GzipExploder,
@@ -67,7 +70,44 @@ var HexExploder = Exploder{
 	Extract:     regexExtractorGenerator(`[a-fA-F0-9]{2,}`),
 }
 
+var HtmlEncodingExploder = Exploder{
+	Transformer: TransformerFactory(html.UnescapeString, html.EscapeString),
+	Filter:      FilterChainGenerator(isAscii, isMinLength(4)),
+	Extract:     regexExtractorGenerator(`&#\d{2,};`),
+}
+
 var UrlExploder = Exploder{
+	Transformer: TransformerFactory(url.PathUnescape, url.PathEscape),
+	Filter:      FilterChainGenerator(isAscii, isMinLength(4)),
+	Extract: func(input []byte) ([][]byte, Signature) {
+		compiledRegex := regexp.MustCompile(`^(GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH) (\/.*) HTTP\/(\d\.\d)`)
+		matches := compiledRegex.FindAllSubmatch(input, -1)
+		if len(matches) == 0 {
+			return [][]byte{}, Signature{}
+		}
+		extracted := [][]byte{}
+		signature := Signature{}
+		for _, match := range matches {
+			if len(match) < 4 {
+				continue
+			}
+			// Extract each element of the path, url decode it, and append it to the extracted array
+			pathElements := strings.Split(string(match[2]), "/")
+			for _, pathElement := range pathElements {
+				decodedElement, err := url.PathUnescape(pathElement)
+				if err != nil {
+					continue
+				}
+				extracted = append(extracted, []byte(decodedElement))
+			}
+			signature.append(Signature(match[1]))
+			signature.append(Signature(match[3]))
+		}
+		return extracted, signature
+	},
+}
+
+var UrlEncodingExploder = Exploder{
 	Transformer: TransformerFactory(url.QueryUnescape, url.QueryEscape),
 	Filter:      FilterChainGenerator(isAscii, isMinLength(4)),
 	Extract:     regexExtractorGenerator(`%[A-Fa-f0-9]{2}+`),
