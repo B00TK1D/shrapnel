@@ -46,6 +46,7 @@ func (e *Fragment) Explode(exploders ...Exploder) {
 				}
 				child.Explode(exploders...)
 				e.children = append(e.children, &child)
+				e.Contents = bytes.ReplaceAll(e.Contents, extracted, child.Contents)
 				signature.append(child.Signature)
 			}
 		}
