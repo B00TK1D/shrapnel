@@ -76,22 +76,24 @@ var UrlExploder = Exploder{
 var HttpHeaderExploder = Exploder{
 	Transformer: TransformerFactory(nil, nil),
 	Filter:      isAscii,
-	Extract: func(input []byte) [][]byte {
+	Extract: func(input []byte) ([][]byte, Signature) {
 		// Extract each header contents
 
 		// Check if the input is HTTP
 		if !isHTTP([]byte(input)) {
-			return [][]byte{}
+			return [][]byte{}, Signature{}
 		}
 
 		// First, split the input into headers and body
 		headerBodySplit := strings.Split(string(input), "\r\n\r\n")
 		if len(headerBodySplit) != 2 {
-			return [][]byte{}
+			return [][]byte{}, Signature{}
 		}
 
 		// Split the headers into individual headers
 		headers := strings.Split(headerBodySplit[0], "\r\n")
+
+		signature := Signature{}
 
 		// Extract the header contents
 		headerContents := make([][]byte, len(headers))
@@ -101,33 +103,37 @@ var HttpHeaderExploder = Exploder{
 				continue
 			}
 			headerContents[i] = []byte(strings.Join(strings.Split(header, ":")[1:], ":"))
+			signature.append(Signature([]byte(strings.Split(header, ":")[0])))
 		}
-		return headerContents
+		return headerContents, signature
 	},
 }
 
 var JsonExploder = Exploder{
 	Transformer: TransformerFactory(nil, nil),
 	Filter:      isAscii,
-	Extract: func(input []byte) [][]byte {
+	Extract: func(input []byte) ([][]byte, Signature) {
 		var result [][]byte
 
 		var obj map[string]interface{}
 		err := json.Unmarshal(input, &obj)
 		if err != nil {
-			return [][]byte{}
+			return [][]byte{}, Signature{}
 		}
 
-		for _, value := range obj {
+		signature := Signature{}
+
+		for key, value := range obj {
 			valueBytes, err := json.Marshal(value)
 			if err != nil {
 				continue
 			}
 
 			result = append(result, valueBytes)
+			signature.append(Signature([]byte(key)))
 		}
 
-		return result
+		return result, signature
 	},
 }
 
@@ -156,12 +162,12 @@ var GzipExploder = Exploder{
 		},
 	},
 	Filter: FilterChainGenerator(isAscii, isMinLength(4)),
-	Extract: func(input []byte) [][]byte {
+	Extract: func(input []byte) ([][]byte, Signature) {
 		// Check if the input is gzip
 		if bytes.HasPrefix(input, []byte{0x1f, 0x8b}) {
-			return [][]byte{input}
+			return [][]byte{input}, Signature{}
 		}
-		return [][]byte{}
+		return [][]byte{}, Signature{}
 	},
 }
 
@@ -190,12 +196,12 @@ var ZlibExploder = Exploder{
 		},
 	},
 	Filter: FilterChainGenerator(isAscii, isMinLength(4)),
-	Extract: func(input []byte) [][]byte {
+	Extract: func(input []byte) ([][]byte, Signature) {
 		// Check if the input is zlib
 		if bytes.HasPrefix(input, []byte{0x78, 0x9c}) {
-			return [][]byte{input}
+			return [][]byte{input}, Signature{}
 		}
-		return [][]byte{}
+		return [][]byte{}, Signature{}
 	},
 }
 
@@ -221,11 +227,11 @@ var BrotiliExploder = Exploder{
 		},
 	},
 	Filter: FilterChainGenerator(isAscii, isMinLength(4)),
-	Extract: func(input []byte) [][]byte {
+	Extract: func(input []byte) ([][]byte, Signature) {
 		// Check if the input is zlib
 		if bytes.HasPrefix(input, []byte{0x78, 0x9c}) {
-			return [][]byte{input}
+			return [][]byte{input}, Signature{}
 		}
-		return [][]byte{}
+		return [][]byte{}, Signature{}
 	},
 }

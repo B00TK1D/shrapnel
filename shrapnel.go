@@ -2,11 +2,14 @@ package shrapnel
 
 import (
 	"bytes"
+	"crypto/md5"
 	"fmt"
 	"regexp"
 )
 
-type Extractor func([]byte) [][]byte
+type Signature []byte
+
+type Extractor func([]byte) ([][]byte, Signature)
 
 type Transformer struct {
 	Transform func([]byte) []byte
@@ -22,25 +25,33 @@ type Exploder struct {
 }
 
 type Fragment struct {
-	children []*Fragment
-	Contents []byte
-	original []byte
-	source   Transformer
+	children  []*Fragment
+	Signature Signature
+	Contents  []byte
+	original  []byte
+	source    Transformer
 }
 
 func (e *Fragment) Explode(exploders ...Exploder) {
-	for _, exploder := range exploders {
-		for _, Extracted := range exploder.Extract(e.Contents) {
-			Transformed := exploder.Transformer.Transform(Extracted)
+	e.Signature = Signature{}
+	for exploderIndex, exploder := range exploders {
+		extracts, signature := exploder.Extract(e.Contents)
+		for _, extracted := range extracts {
+			Transformed := exploder.Transformer.Transform(extracted)
 			if exploder.Filter(Transformed) {
 				child := Fragment{
 					Contents: Transformed,
-					original: Extracted,
+					original: extracted,
 					source:   exploder.Transformer,
 				}
 				child.Explode(exploders...)
 				e.children = append(e.children, &child)
+				signature.append(child.Signature)
 			}
+		}
+		if len(extracts) > 0 {
+			e.Signature.append(Signature{byte(exploderIndex)})
+			e.Signature.append(signature)
 		}
 	}
 }
@@ -63,10 +74,26 @@ func (e *Fragment) Apply(visitor func([]byte) []byte) {
 }
 
 func (e *Fragment) Print() {
-	fmt.Println(string(e.Contents) + "\n")
+	fmt.Printf("%x: %s\n", e.Signature, string(e.Contents))
 	for _, child := range e.children {
 		child.Print()
 	}
+}
+
+func (s *Signature) append(appended ...Signature) {
+	combinedLength := len(*s)
+	for _, append := range appended {
+		combinedLength += len(append)
+	}
+	combined := make([]byte, combinedLength)
+	combinedIndex := len(*s)
+	copy(combined[0:len(*s)], *s)
+	for _, append := range appended {
+		copy(combined[combinedIndex:], append[:])
+		combinedIndex += len(append)
+	}
+	hash := md5.Sum(combined)
+	*s = hash[:]
 }
 
 func TransformerFactory(t interface{}, r interface{}) Transformer {
@@ -136,9 +163,9 @@ func TransformerGenerator(Transform interface{}) func([]byte) []byte {
 	}
 }
 
-func regexExtractorGenerator(regex string) func([]byte) [][]byte {
-	return func(input []byte) [][]byte {
-		return regexp.MustCompile(regex).FindAll(input, -1)
+func regexExtractorGenerator(regex string) Extractor {
+	return func(input []byte) ([][]byte, Signature) {
+		return regexp.MustCompile(regex).FindAll(input, -1), Signature{}
 	}
 }
 
