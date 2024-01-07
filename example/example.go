@@ -56,6 +56,6 @@ func main() {
 	fmt.Println(string(original.Contents))
 
 	// Print the results
-	fmt.Println(string(original.Contents))
+	fmt.Println(string(original.Flatten()))
 	fmt.Printf("New signature:\t\t%x\n", original.Signature)
 }

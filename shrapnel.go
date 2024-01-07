@@ -84,9 +84,6 @@ func (e *Fragment) Flatten() []byte {
 	flattened := []byte(" [[[[[[[[ ")
 	added := [][]byte{}
 	for _, child := range e.children {
-		if len(added) > 0 {
-			flattened = append(flattened, []byte(" ,,,,,,,, ")...)
-		}
 		existing := false
 		for _, add := range added {
 			if bytes.Equal(add, child.Contents) {
@@ -95,8 +92,12 @@ func (e *Fragment) Flatten() []byte {
 				break
 			}
 		}
-		if !existing {
-			flattened = append(flattened, child.Flatten()...)
+		childFlattened := child.Flatten()
+		if !existing && len(childFlattened) > 0 {
+			if len(added) > 0 {
+				flattened = append(flattened, []byte(" ,,,,,,,, ")...)
+			}
+			flattened = append(flattened, childFlattened...)
 			added = append(added, child.Contents)
 		}
 	}
