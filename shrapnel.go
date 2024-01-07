@@ -128,20 +128,20 @@ func (s *Signature) append(appended ...Signature) {
 	*s = hash[:]
 }
 
-func Parallel(visitor func([][]byte) []byte, fragments ...Fragment) ([][]byte, error) {
+func Parallel[T any](visitor func([][]byte) T, fragments ...Fragment) ([]T, error) {
 	if len(fragments) == 0 {
-		return [][]byte{}, fmt.Errorf("no fragments provided")
+		return []T{}, fmt.Errorf("no fragments provided")
 	}
 	// Check if all fragments have the same signature
 	//   (Same signature garuntees same number of children at each level - this is important)
 	for _, fragment := range fragments {
 		if !bytes.Equal(fragment.Signature, fragments[0].Signature) {
-			return [][]byte{}, fmt.Errorf("fragments have different signatures")
+			return []T{}, fmt.Errorf("fragments have different signatures")
 		}
 	}
 	// Apply the visitor to the current level
 	contents := [][]byte{}
-	result := [][]byte{}
+	result := []T{}
 	for _, fragment := range fragments {
 		contents = append(contents, fragment.Contents)
 	}

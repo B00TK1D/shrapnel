@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -37,9 +36,9 @@ func main() {
 	//fmt.Println("----------------------------------------------------")
 
 	// Apply a converter that changes "user" to "newthing"
-	original.Apply(func(input []byte) []byte {
-		return bytes.ReplaceAll(input, []byte("triple"), []byte("quadruple"))
-	})
+	// original.Apply(func(input []byte) []byte {
+	// 	return bytes.ReplaceAll(input, []byte("triple"), []byte("quadruple"))
+	// })
 
 	// Print the results
 	//original.Print()
@@ -59,66 +58,66 @@ func main() {
 	fmt.Println(string(original.Flatten()))
 	fmt.Printf("New signature:\t\t%x\n", original.Signature)
 
-	fmt.Printf("\n\n\n")
+	// fmt.Printf("\n\n\n")
 
 	// Open 2 input files
-	f1, err := os.Open("input1.txt")
-	if err != nil {
-		panic(err)
-	}
-	defer f1.Close()
-	input1, err := io.ReadAll(f1)
-	if err != nil {
-		panic(err)
-	}
+	// f1, err := os.Open("input1.txt")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer f1.Close()
+	// input1, err := io.ReadAll(f1)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	f2, err := os.Open("input2.txt")
-	if err != nil {
-		panic(err)
-	}
-	defer f2.Close()
-	input2, err := io.ReadAll(f2)
-	if err != nil {
-		panic(err)
-	}
+	// f2, err := os.Open("input2.txt")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer f2.Close()
+	// input2, err := io.ReadAll(f2)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	// Create 2 new shrapnel objects
-	original1 := shrapnel.Fragment{
-		Contents: input1,
-	}
-	original2 := shrapnel.Fragment{
-		Contents: input2,
-	}
+	// // Create 2 new shrapnel objects
+	// original1 := shrapnel.Fragment{
+	// 	Contents: input1,
+	// }
+	// original2 := shrapnel.Fragment{
+	// 	Contents: input2,
+	// }
 
-	// Explode the inputs
-	original1.Explode(shrapnel.AllExploders...)
-	original2.Explode(shrapnel.AllExploders...)
+	// // Explode the inputs
+	// original1.Explode(shrapnel.AllExploders...)
+	// original2.Explode(shrapnel.AllExploders...)
 
-	// Print their signatures
-	fmt.Printf("Original 1 signature:\t%x\n", original1.Signature)
-	fmt.Printf("Original 2 signature:\t%x\n", original2.Signature)
+	// // Print their signatures
+	// fmt.Printf("Original 1 signature:\t%x\n", original1.Signature)
+	// fmt.Printf("Original 2 signature:\t%x\n", original2.Signature)
 
-	fmt.Printf("%s\n", original1.Flatten())
-	fmt.Printf("%s\n", original2.Flatten())
+	// fmt.Printf("%s\n", original1.Flatten())
+	// fmt.Printf("%s\n", original2.Flatten())
 
-	fmt.Println("----------------------------------------------------")
+	// fmt.Println("----------------------------------------------------")
 
-	// Find differences between the two inputs
-	result, err := shrapnel.Parallel(func(inputs [][]byte) []byte {
-		for _, input := range inputs {
-			if !bytes.Equal(input, inputs[0]) {
-				return append(append(inputs[0], []byte(" >>>>>>>> ")...), input...)
-			}
-		}
-		return []byte{}
-	}, original1, original2)
-	if err != nil {
-		panic(err)
-	}
+	// // Find differences between the two inputs
+	// result, err := shrapnel.Parallel(func(inputs [][]byte) []byte {
+	// 	for _, input := range inputs {
+	// 		if !bytes.Equal(input, inputs[0]) {
+	// 			return append(append(inputs[0], []byte(" >>>>>>>> ")...), input...)
+	// 		}
+	// 	}
+	// 	return []byte{}
+	// }, original1, original2)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	// Print the results
-	for _, r := range result {
-		fmt.Println(string(r))
-	}
+	// // Print the results
+	// for _, r := range result {
+	// 	fmt.Println(string(r))
+	// }
 
 }
