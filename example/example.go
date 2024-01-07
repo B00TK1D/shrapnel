@@ -103,7 +103,22 @@ func main() {
 
 	fmt.Println("----------------------------------------------------")
 
-	original1.Print()
-	original2.Print()
+	// Find differences between the two inputs
+	result, err := shrapnel.Parallel(func(inputs [][]byte) []byte {
+		for _, input := range inputs {
+			if !bytes.Equal(input, inputs[0]) {
+				return append(append(inputs[0], []byte(" >>>>>>>> ")...), input...)
+			}
+		}
+		return []byte{}
+	}, original1, original2)
+	if err != nil {
+		panic(err)
+	}
+
+	// Print the results
+	for _, r := range result {
+		fmt.Println(string(r))
+	}
 
 }
