@@ -58,4 +58,52 @@ func main() {
 	// Print the results
 	fmt.Println(string(original.Flatten()))
 	fmt.Printf("New signature:\t\t%x\n", original.Signature)
+
+	fmt.Printf("\n\n\n")
+
+	// Open 2 input files
+	f1, err := os.Open("input1.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer f1.Close()
+	input1, err := io.ReadAll(f1)
+	if err != nil {
+		panic(err)
+	}
+
+	f2, err := os.Open("input2.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer f2.Close()
+	input2, err := io.ReadAll(f2)
+	if err != nil {
+		panic(err)
+	}
+
+	// Create 2 new shrapnel objects
+	original1 := shrapnel.Fragment{
+		Contents: input1,
+	}
+	original2 := shrapnel.Fragment{
+		Contents: input2,
+	}
+
+	// Explode the inputs
+	original1.Explode(shrapnel.AllExploders...)
+	original2.Explode(shrapnel.AllExploders...)
+
+	// Print their signatures
+	fmt.Printf("Original 1 signature:\t%x\n", original1.Signature)
+	fmt.Printf("Original 2 signature:\t%x\n", original2.Signature)
+
+	fmt.Printf("%s\n", original1.Flatten())
+	fmt.Printf("%s\n", original2.Flatten())
+
+	fmt.Println("----------------------------------------------------")
+
+	original1.Print()
+	original2.Print()
+
 }

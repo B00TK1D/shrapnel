@@ -1,0 +1,10 @@
+POST /api/register HTTP/1.1
+Host: 10.60.9.1:5000
+User-Agent: checker
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+Content-Length: 79
+Content-Type: application/json
+
+{"username": "new_username", "password": "new_password"}

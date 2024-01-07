@@ -33,6 +33,7 @@ type Fragment struct {
 }
 
 func (e *Fragment) Explode(exploders ...Exploder) {
+	e.Signature = Signature{}
 	for exploderIndex, exploder := range exploders {
 		extracts, signature := exploder.Extract(e.Contents)
 		for _, extracted := range extracts {
@@ -45,10 +46,12 @@ func (e *Fragment) Explode(exploders ...Exploder) {
 				}
 				e.children = append(e.children, &child)
 				child.Explode(exploders...)
-				signature.append(child.Signature)
+				if len(child.Signature) > 0 {
+					signature.append(child.Signature)
+				}
 			}
 		}
-		if len(extracts) > 0 {
+		if len(extracts) > 0 && len(signature) > 0 {
 			e.Signature.append(Signature{byte(exploderIndex)})
 			e.Signature.append(signature)
 		}
@@ -116,19 +119,45 @@ func (e *Fragment) Print() {
 }
 
 func (s *Signature) append(appended ...Signature) {
-	combinedLength := len(*s)
-	for _, append := range appended {
-		combinedLength += len(append)
-	}
-	combined := make([]byte, combinedLength)
-	combinedIndex := len(*s)
-	copy(combined[0:len(*s)], *s)
-	for _, append := range appended {
-		copy(combined[combinedIndex:], append[:])
-		combinedIndex += len(append)
+	combined := make([]byte, 0)
+	combined = append(combined, *s...)
+	for _, a := range appended {
+		combined = append(combined, a...)
 	}
 	hash := md5.Sum(combined)
 	*s = hash[:]
+}
+
+func Parallel(visitor func([][]byte) []byte, fragments ...Fragment) ([][]byte, error) {
+	if len(fragments) == 0 {
+		return [][]byte{}, fmt.Errorf("no fragments provided")
+	}
+	// Check if all fragments have the same signature
+	//   (Same signature garuntees same number of children at each level - this is important)
+	for _, fragment := range fragments {
+		if !bytes.Equal(fragment.Signature, fragments[0].Signature) {
+			return [][]byte{}, fmt.Errorf("fragments have different signatures")
+		}
+	}
+	// Apply the visitor to the current level
+	contents := [][]byte{}
+	result := [][]byte{}
+	for _, fragment := range fragments {
+		contents = append(contents, fragment.Contents)
+	}
+	result = append(result, visitor(contents))
+	// Apply the visitor to all fragments, stepping through each fragment in parallel
+	for childIndex := range fragments[0].children {
+		childFragments := []Fragment{}
+		for _, fragment := range fragments {
+			childFragments = append(childFragments, *fragment.children[childIndex])
+		}
+		childResults, err := Parallel(visitor, childFragments...)
+		if err == nil {
+			result = append(result, childResults...)
+		}
+	}
+	return result, nil
 }
 
 func TransformerFactory(t interface{}, r interface{}) Transformer {
