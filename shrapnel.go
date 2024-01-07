@@ -74,11 +74,9 @@ func (e *Fragment) Apply(visitor func([]byte) []byte) {
 
 func (e *Fragment) Flatten() []byte {
 	if len(e.children) == 0 {
-		fmt.Println("No children: ", string(e.Contents))
 		return e.Contents
 	}
 	if len(e.children) == 1 {
-		fmt.Println("One child: ", string(e.Contents), " -> ", string(e.children[0].Flatten()))
 		return append(append(e.Contents, []byte(" >>>>>>>> ")...), e.children[0].Flatten()...)
 	}
 	flattened := []byte(" [[[[[[[[ ")
@@ -87,7 +85,6 @@ func (e *Fragment) Flatten() []byte {
 		existing := false
 		for _, add := range added {
 			if bytes.Equal(add, child.Contents) {
-				fmt.Println("Existing: ", string(e.Contents), " === ", string(add))
 				existing = true
 				break
 			}
@@ -103,11 +100,9 @@ func (e *Fragment) Flatten() []byte {
 	}
 	flattened = append(flattened, []byte(" ]]]]]]]] ")...)
 	if len(added) == 0 {
-		fmt.Println("No added: ", string(e.Contents), " -> ", string(flattened))
 		return e.Contents
 	}
 	if len(added) == 1 {
-		fmt.Println("One added: ", string(e.Contents), " -> ", string(added[0]))
 		return append(append(e.Contents, []byte(" >>>>>>>> ")...), added[0]...)
 	}
 	return flattened
