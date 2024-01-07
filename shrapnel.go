@@ -149,8 +149,16 @@ func Parallel[T any](visitor func([][]byte) T, fragments ...Fragment) ([]T, erro
 	// Apply the visitor to all fragments, stepping through each fragment in parallel
 	for childIndex := range fragments[0].children {
 		childFragments := []Fragment{}
+		valid := true
 		for _, fragment := range fragments {
+			if len(fragment.children) <= childIndex {
+				valid = false
+				break
+			}
 			childFragments = append(childFragments, *fragment.children[childIndex])
+		}
+		if !valid {
+			continue
 		}
 		childResults, err := Parallel(visitor, childFragments...)
 		if err == nil {
