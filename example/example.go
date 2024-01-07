@@ -31,29 +31,31 @@ func main() {
 	original.Explode(shrapnel.AllExploders...)
 
 	// Print the original signature
-	original.Print()
+	//original.Print()
 	fmt.Printf("Original signature:\t%x\n", original.Signature)
 
-	fmt.Println("----------------------------------------------------")
+	//fmt.Println("----------------------------------------------------")
 
 	// Apply a converter that changes "user" to "newthing"
 	original.Apply(func(input []byte) []byte {
-		return bytes.ReplaceAll(input, []byte("secret"), []byte("trash"))
+		return bytes.ReplaceAll(input, []byte("triple"), []byte("quadruple"))
 	})
 
 	// Print the results
+	//original.Print()
+
+	// Implode the input
+	original.Implode()
+
+	fmt.Println("----------------------------------------------------")
+
 	original.Print()
 
 	fmt.Println("----------------------------------------------------")
 
-	// Implode the input
-	original.Implode()
-	updated := shrapnel.Fragment{
-		Contents: original.Contents,
-	}
-	updated.Explode(shrapnel.AllExploders...)
+	fmt.Println(string(original.Contents))
 
 	// Print the results
-	fmt.Println(string(updated.Contents))
-	fmt.Printf("New signature:\t\t%x\n", updated.Signature)
+	fmt.Println(string(original.Contents))
+	fmt.Printf("New signature:\t\t%x\n", original.Signature)
 }

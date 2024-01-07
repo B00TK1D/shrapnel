@@ -33,20 +33,18 @@ type Fragment struct {
 }
 
 func (e *Fragment) Explode(exploders ...Exploder) {
-	e.Signature = Signature{}
 	for exploderIndex, exploder := range exploders {
 		extracts, signature := exploder.Extract(e.Contents)
 		for _, extracted := range extracts {
-			Transformed := exploder.Transformer.Transform(extracted)
-			if exploder.Filter(Transformed) {
+			transformed := exploder.Transformer.Transform(extracted)
+			if exploder.Filter(transformed) {
 				child := Fragment{
-					Contents: Transformed,
+					Contents: transformed,
 					original: extracted,
 					source:   exploder.Transformer,
 				}
-				child.Explode(exploders...)
 				e.children = append(e.children, &child)
-				e.Contents = bytes.ReplaceAll(e.Contents, extracted, child.Contents)
+				child.Explode(exploders...)
 				signature.append(child.Signature)
 			}
 		}
@@ -72,6 +70,46 @@ func (e *Fragment) Apply(visitor func([]byte) []byte) {
 	for _, child := range e.children {
 		child.Apply(visitor)
 	}
+}
+
+func (e *Fragment) Flatten() []byte {
+	if len(e.children) == 0 {
+		fmt.Println("No children: ", string(e.Contents))
+		return e.Contents
+	}
+	if len(e.children) == 1 {
+		fmt.Println("One child: ", string(e.Contents), " -> ", string(e.children[0].Flatten()))
+		return append(append(e.Contents, []byte(" >>>>>>>> ")...), e.children[0].Flatten()...)
+	}
+	flattened := []byte(" [[[[[[[[ ")
+	added := [][]byte{}
+	for _, child := range e.children {
+		if len(added) > 0 {
+			flattened = append(flattened, []byte(" ,,,,,,,, ")...)
+		}
+		existing := false
+		for _, add := range added {
+			if bytes.Equal(add, child.Contents) {
+				fmt.Println("Existing: ", string(e.Contents), " === ", string(add))
+				existing = true
+				break
+			}
+		}
+		if !existing {
+			flattened = append(flattened, child.Flatten()...)
+			added = append(added, child.Contents)
+		}
+	}
+	flattened = append(flattened, []byte(" ]]]]]]]] ")...)
+	if len(added) == 0 {
+		fmt.Println("No added: ", string(e.Contents), " -> ", string(flattened))
+		return e.Contents
+	}
+	if len(added) == 1 {
+		fmt.Println("One added: ", string(e.Contents), " -> ", string(added[0]))
+		return append(append(e.Contents, []byte(" >>>>>>>> ")...), added[0]...)
+	}
+	return flattened
 }
 
 func (e *Fragment) Print() {
