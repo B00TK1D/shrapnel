@@ -216,7 +216,7 @@ func ParallelBottom[T any](visitor func([][]byte) T, fragments ...Fragment) ([]T
 		if !valid {
 			continue
 		}
-		childResults, err := Parallel(visitor, childFragments...)
+		childResults, err := ParallelBottom(visitor, childFragments...)
 		if err == nil {
 			result = append(result, childResults...)
 		}
