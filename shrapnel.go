@@ -174,6 +174,56 @@ func Parallel[T any](visitor func([][]byte) T, fragments ...Fragment) ([]T, erro
 	return result, nil
 }
 
+func ParallelBottom[T any](visitor func([][]byte) T, fragments ...Fragment) ([]T, error) {
+	if len(fragments) == 0 {
+		return []T{}, fmt.Errorf("no fragments provided")
+	}
+	if len(fragments[0].children) == 0 {
+		// No children, apply visitor to current level
+
+		// Check if all fragments have the same signature
+		//   (Same signature garuntees same number of children at each level - this is important)
+		for _, fragment := range fragments {
+			if !bytes.Equal(fragment.Signature, fragments[0].Signature) {
+				return []T{}, fmt.Errorf("fragments have different signatures")
+			}
+		}
+		// Apply the visitor to the current level
+		contents := [][]byte{}
+		for _, fragment := range fragments {
+			contents = append(contents, fragment.Contents)
+		}
+		// Verify that all fragments have the same number of children
+		for _, fragment := range fragments {
+			if len(fragment.children) != len(fragments[0].children) {
+				return []T{}, fmt.Errorf("fragments have different number of children")
+			}
+		}
+		return []T{visitor(contents)}, nil
+	}
+	result := []T{}
+	// Apply the visitor to all fragments, stepping through each fragment in parallel
+	for childIndex := range fragments[0].children {
+		childFragments := []Fragment{}
+		valid := true
+		for _, fragment := range fragments {
+			if len(fragment.children) <= childIndex {
+				valid = false
+				break
+			}
+			childFragments = append(childFragments, *fragment.children[childIndex])
+		}
+		if !valid {
+			continue
+		}
+		childResults, err := Parallel(visitor, childFragments...)
+		if err == nil {
+			result = append(result, childResults...)
+		}
+	}
+	return result, nil
+}
+
 func TransformerFactory(t interface{}, r interface{}) Transformer {
 	return Transformer{
 		Transform: TransformerGenerator(t),
